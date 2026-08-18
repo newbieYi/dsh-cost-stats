@@ -31,14 +31,7 @@ npm install -g @deepseek-ai/dsh
 ### 安装插件
 
 ```bash
-dsh plugin --profile web add dsh-cost-stats
-```
-
-或手动 link 安装：
-
-```bash
-cd ~/.dsh/profiles/web
-pnpm add dsh-cost-stats@link:/path/to/dsh-cost-stats
+dsh plugin --profile web add github:newbieYi/dsh-cost-stats
 ```
 
 在 `package.json` 的 `dsh.profile.bundles` 中添加 `"dsh-cost-stats"`，重启 DSH 即可。
