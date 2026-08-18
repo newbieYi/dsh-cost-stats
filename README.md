@@ -20,21 +20,79 @@ DSH Web 插件：会话级成本统计面板。
 
 ## 安装
 
-### 前置条件
+### 第 1 步：安装 DSH 本体
 
-需要先安装 [DSH (DeepSeek Harness)](https://github.com/nicepkg/dsh)：
+插件依赖 [DSH (DeepSeek Harness)](https://github.com/nicepkg/dsh)。如果终端执行 `dsh -V` 提示 `command not found`，说明还没装：
 
 ```bash
 npm install -g @deepseek-ai/dsh
 ```
 
-### 安装插件
+装好后确认一下：
+
+```bash
+dsh -V
+```
+
+### 第 2 步：下载插件到 web profile
 
 ```bash
 dsh plugin --profile web add github:newbieYi/dsh-cost-stats
 ```
 
-在 `package.json` 的 `dsh.profile.bundles` 中添加 `"dsh-cost-stats"`，重启 DSH 即可。
+这一步只是把包下载进 `~/.dsh/profiles/web/node_modules`，插件还不会生效，必须继续第 3 步。
+
+### 第 3 步：在 bundles 中登记插件
+
+打开 `~/.dsh/profiles/web/package.json`，在 `dsh.profile.bundles` 数组末尾加一行 `"dsh-cost-stats"`：
+
+```json
+{
+  "dsh": {
+    "profile": {
+      "bundles": [
+        "@deepseek-ai/dsh-base",
+        "@deepseek-ai/dsh-web-app",
+        "dsh-cost-stats"
+      ]
+    }
+  }
+}
+```
+
+注意 JSON 语法：新增行的前一行末尾要补英文逗号。数组里原有的条目保持不动。
+
+### 第 4 步：重启 DSH
+
+插件在启动时装载，改完配置必须重启才生效。请正常退出，不要用 `kill -9`，否则会话数据可能来不及落盘：
+
+1. 切到正在运行 `dsh web` 的那个终端窗口，按 `Ctrl + C` 等它自己退出；
+2. 重新启动：
+
+```bash
+dsh web
+```
+
+如果找不到原来的终端窗口，可以先查一下进程再正常终止：
+
+```bash
+lsof -ti :3080 | xargs kill
+```
+
+### 第 5 步：验证
+
+浏览器打开 DSH Web，进入任意会话，tab 栏里应该能看到「成本统计」。
+
+## 常见问题
+
+**装完没有「成本统计」tab？**
+九成是漏了第 3 步，或者没重启。先检查 `~/.dsh/profiles/web/package.json` 的 `bundles` 里有没有 `"dsh-cost-stats"`。
+
+**启动时报 `declares no dsh.bundle`？**
+说明包没下载完整，重跑第 2 步。
+
+**表格里出现 `unknown` 模型？**
+DSH 内部调用（生成会话标题、上下文压缩等）不带模型标识，它们的 token 会归到 `unknown` 行，属于正常现象。
 
 ## 使用
 
