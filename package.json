@@ -1,6 +1,6 @@
 {
   "name": "dsh-cost-stats",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "DSH web client plugin: a per-conversation cost-statistics tab (token usage + estimated cost per model)",
   "type": "module",
   "main": "lib/index.js",
