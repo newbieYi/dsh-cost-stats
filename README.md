@@ -20,6 +20,16 @@ DSH Web 插件：会话级成本统计面板。
 
 ## 安装
 
+### 前置条件
+
+需要先安装 [DSH (DeepSeek Harness)](https://github.com/nicepkg/dsh)：
+
+```bash
+npm install -g @deepseek-ai/dsh
+```
+
+### 安装插件
+
 ```bash
 dsh plugin --profile web add dsh-cost-stats
 ```
