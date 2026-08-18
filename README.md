@@ -34,49 +34,38 @@ npm install -g @deepseek-ai/dsh
 dsh -V
 ```
 
-### 第 2 步：下载插件到 web profile
+### 第 2 步：安装并登记插件
+
+整段复制到终端执行即可，不用手改任何文件：
 
 ```bash
-dsh plugin --profile web add github:newbieYi/dsh-cost-stats
-```
+PLUGIN=dsh-cost-stats
+REPO=newbieYi/dsh-cost-stats
+PROFILE="$HOME/.dsh/profiles/web"
 
-这一步只是把包下载进 `~/.dsh/profiles/web/node_modules`，插件还不会生效，必须继续第 3 步。
-
-**先确认下载真的成功了**，再做第 3 步：
-
-```bash
-ls ~/.dsh/profiles/web/node_modules/dsh-cost-stats/cordis.patch.yml
-```
-
-打印出路径就算成功。若提示 `No such file or directory`，说明下载没成功（常见原因：网络不通、pnpm 不可用）。**这时不要做第 3 步**，否则 DSH 启动会直接失败：
-
-```
-Error: dsh: cannot resolve profile bundle "dsh-cost-stats" ...
-```
-
-请先解决下载问题并重跑本步命令，确认上面的 `ls` 有输出后再继续。
-
-### 第 3 步：在 bundles 中登记插件
-
-打开 `~/.dsh/profiles/web/package.json`，在 `dsh.profile.bundles` 数组末尾加一行 `"dsh-cost-stats"`：
-
-```json
-{
-  "dsh": {
-    "profile": {
-      "bundles": [
-        "@deepseek-ai/dsh-base",
-        "@deepseek-ai/dsh-web-app",
-        "dsh-cost-stats"
-      ]
-    }
-  }
+dsh plugin --profile web add "github:$REPO" \
+&& test -f "$PROFILE/node_modules/$PLUGIN/cordis.patch.yml" \
+&& node -e '
+const fs = require("fs");
+const file = process.argv[1] + "/package.json";
+const name = process.argv[2];
+const pkg = JSON.parse(fs.readFileSync(file, "utf8"));
+const profile = ((pkg.dsh ??= {}).profile ??= {});
+const list = (profile.bundles ??= []);
+if (!list.includes(name)) {
+  list.push(name);
+  fs.writeFileSync(file, JSON.stringify(pkg, null, 2) + "\n");
 }
+console.log("已登记 bundles:", list.join(", "));
+' "$PROFILE" "$PLUGIN" \
+|| echo "安装未完成，profile 未被改动。请检查网络后重跑本段。"
 ```
 
-注意 JSON 语法：新增行的前一行末尾要补英文逗号。数组里原有的条目保持不动。
+看到 `已登记 bundles: ... dsh-cost-stats` 就成功了，继续第 3 步。
 
-### 第 4 步：重启 DSH
+看到 `安装未完成` 说明包没下载下来（常见原因：网络不通、pnpm 不可用）。这时 profile 没有被改动，DSH 仍能正常启动；解决网络问题后重跑本段即可。
+
+### 第 3 步：重启 DSH
 
 插件在启动时装载，改完配置必须重启才生效。请正常退出，不要用 `kill -9`，否则会话数据可能来不及落盘：
 
@@ -93,25 +82,31 @@ dsh web
 lsof -ti :3080 | xargs kill
 ```
 
-### 第 5 步：验证
+### 第 4 步：验证
 
 浏览器打开 DSH Web，进入任意会话，tab 栏里应该能看到「成本统计」。
 
 ## 常见问题
 
 **装完没有「成本统计」tab？**
-九成是漏了第 3 步，或者没重启。先检查 `~/.dsh/profiles/web/package.json` 的 `bundles` 里有没有 `"dsh-cost-stats"`。
+九成是没重启。也可以检查 `~/.dsh/profiles/web/package.json` 的 `bundles` 里有没有 `"dsh-cost-stats"`。
 
 **启动时报 `cannot resolve profile bundle "dsh-cost-stats"`？**
-`bundles` 里登记了插件，但 `node_modules` 里没有这个包，也就是第 3 步做了、第 2 步没成功。补做第 2 步即可：
+`bundles` 里登记了插件，但 `node_modules` 里没有这个包。重跑第 2 步那段即可（它会先确认下载成功再动 profile）。
+
+如果始终装不上，用这条命令把登记撤掉，DSH 就能正常启动，之后再从容排查网络问题：
 
 ```bash
-dsh plugin --profile web add github:newbieYi/dsh-cost-stats
-ls ~/.dsh/profiles/web/node_modules/dsh-cost-stats/cordis.patch.yml
-dsh web
+node -e '
+const fs = require("fs");
+const file = process.env.HOME + "/.dsh/profiles/web/package.json";
+const pkg = JSON.parse(fs.readFileSync(file, "utf8"));
+const list = pkg.dsh?.profile?.bundles ?? [];
+pkg.dsh.profile.bundles = list.filter((n) => n !== "dsh-cost-stats");
+fs.writeFileSync(file, JSON.stringify(pkg, null, 2) + "\n");
+console.log("剩余 bundles:", pkg.dsh.profile.bundles.join(", "));
+'
 ```
-
-如果这条命令始终失败（装不上），就先把 `~/.dsh/profiles/web/package.json` 的 `bundles` 里那行 `"dsh-cost-stats"` 删掉（注意同时处理前一行多余的逗号），DSH 就能正常启动了，之后再从容排查下载问题。
 
 **启动时报 `declares no dsh.bundle` 或 `failed to read overlay ... cordis.patch.yml`？**
 包下载得不完整。重跑第 2 步；若仍然如此，先 `dsh plugin --profile web remove dsh-cost-stats` 再重新 add，避免 pnpm 复用坏的缓存。
