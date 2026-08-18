@@ -42,6 +42,20 @@ dsh plugin --profile web add github:newbieYi/dsh-cost-stats
 
 这一步只是把包下载进 `~/.dsh/profiles/web/node_modules`，插件还不会生效，必须继续第 3 步。
 
+**先确认下载真的成功了**，再做第 3 步：
+
+```bash
+ls ~/.dsh/profiles/web/node_modules/dsh-cost-stats/cordis.patch.yml
+```
+
+打印出路径就算成功。若提示 `No such file or directory`，说明下载没成功（常见原因：网络不通、pnpm 不可用）。**这时不要做第 3 步**，否则 DSH 启动会直接失败：
+
+```
+Error: dsh: cannot resolve profile bundle "dsh-cost-stats" ...
+```
+
+请先解决下载问题并重跑本步命令，确认上面的 `ls` 有输出后再继续。
+
 ### 第 3 步：在 bundles 中登记插件
 
 打开 `~/.dsh/profiles/web/package.json`，在 `dsh.profile.bundles` 数组末尾加一行 `"dsh-cost-stats"`：
@@ -88,8 +102,19 @@ lsof -ti :3080 | xargs kill
 **装完没有「成本统计」tab？**
 九成是漏了第 3 步，或者没重启。先检查 `~/.dsh/profiles/web/package.json` 的 `bundles` 里有没有 `"dsh-cost-stats"`。
 
-**启动时报 `declares no dsh.bundle`？**
-说明包没下载完整，重跑第 2 步。
+**启动时报 `cannot resolve profile bundle "dsh-cost-stats"`？**
+`bundles` 里登记了插件，但 `node_modules` 里没有这个包，也就是第 3 步做了、第 2 步没成功。补做第 2 步即可：
+
+```bash
+dsh plugin --profile web add github:newbieYi/dsh-cost-stats
+ls ~/.dsh/profiles/web/node_modules/dsh-cost-stats/cordis.patch.yml
+dsh web
+```
+
+如果这条命令始终失败（装不上），就先把 `~/.dsh/profiles/web/package.json` 的 `bundles` 里那行 `"dsh-cost-stats"` 删掉（注意同时处理前一行多余的逗号），DSH 就能正常启动了，之后再从容排查下载问题。
+
+**启动时报 `declares no dsh.bundle` 或 `failed to read overlay ... cordis.patch.yml`？**
+包下载得不完整。重跑第 2 步；若仍然如此，先 `dsh plugin --profile web remove dsh-cost-stats` 再重新 add，避免 pnpm 复用坏的缓存。
 
 **表格里出现 `unknown` 模型？**
 DSH 内部调用（生成会话标题、上下文压缩等）不带模型标识，它们的 token 会归到 `unknown` 行，属于正常现象。
