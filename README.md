@@ -21,12 +21,23 @@ DSH Web 插件：会话级成本统计面板。
 
 ## 支持的模型定价
 
-| 模型 | 输入 | 缓存读 | 缓存写 | 输出 |
-|------|------|--------|--------|------|
-| deepseek-v4-pro | $0.43/M | $0.004/M | — | $0.86/M |
-| deepseek-v4-flash | $0.14/M | $0.003/M | — | $0.29/M |
-| claude-opus-5-thinking | $5.0/M | $0.5/M | $6.25/M | $25.0/M |
-| claude-opus-5 | $5.0/M | $0.5/M | $6.25/M | $25.0/M |
+单价由 DSH 内置的 `pi-ai` 官方价目表提供（`@earendil-works/pi-ai` 的 `dist/providers/data/*.json`，USD / 百万 tokens），覆盖 37 个提供商、700+ 模型，且随 DSH 升级自动更新。插件在 host 侧注册 `costStats` 会话投影，用这套官方价对 provider 回报的真实 token 用量计费，浏览器端直接读投影结果——**不再维护手写价目表**。
+
+个别模型（例如 `claude-opus-5-thinking` 这类经自定义 provider 接入的模型）不在 `pi-ai` 目录里，面板会显示「—」而非猜测一个价格。
+
+### 刷新价目表（开发用）
+
+价格快照由脚本生成，DSH 升级 `pi-ai` 后重跑一次即可：
+
+```bash
+node scripts/sync-prices.mjs
+```
+
+脚本默认读取 DSH 安装目录下的 `pi-ai` 数据，也可显式传路径：
+
+```bash
+node scripts/sync-prices.mjs /path/to/pi-ai/dist/providers/data
+```
 
 ## 安装
 

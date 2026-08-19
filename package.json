@@ -1,6 +1,6 @@
 {
   "name": "dsh-cost-stats",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "DSH web client plugin: a per-conversation cost-statistics tab (token usage + estimated cost per model and per request)",
   "type": "module",
   "main": "lib/index.js",
@@ -32,6 +32,7 @@
   "files": [
     "lib/index.js",
     "lib/client.js",
+    "lib/prices.generated.js",
     "lib/types/**/*.d.ts",
     "cordis.patch.yml"
   ],
