@@ -19,6 +19,8 @@ DSH Web 插件：会话级成本统计面板。
 
 ![成本统计面板](docs/images/cost-panel.png)
 
+![成本分析](docs/images/cost-analysis.png)
+
 ## 支持的模型定价
 
 单价由 DSH 内置的 `pi-ai` 官方价目表提供（`@earendil-works/pi-ai` 的 `dist/providers/data/*.json`，USD / 百万 tokens），覆盖 37 个提供商、700+ 模型，且随 DSH 升级自动更新。插件在 host 侧注册 `costStats` 会话投影，用这套官方价对 provider 回报的真实 token 用量计费，浏览器端直接读投影结果——**不再维护手写价目表**。
